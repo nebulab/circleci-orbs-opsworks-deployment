@@ -35,7 +35,7 @@ workflows:
           filters:
             branches:
               only: master
-      - approve-productiom:
+      - approve-production:
           requires:
             - opsworks/deploy-staging
           type: approval
