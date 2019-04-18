@@ -1,0 +1,5 @@
+version: 2.1
+
+description: >
+  An Orb for linking a Stoplight project to your Git repository and publishing your API
+  documentation. Full orb source code: https://github.com/nebulab/circleci-orbs-opsworks-deployment.

@@ -1,0 +1,68 @@
+version: 2.1
+
+orbs:
+  orb-tools: circleci/orb-tools@7.0.0
+
+workflows:
+  lint_pack-validate_publish-dev:
+    jobs:
+      - orb-tools/lint
+
+      - orb-tools/pack:
+          requires:
+            - orb-tools/lint
+
+      - orb-tools/publish-dev:
+          orb-name: nebulab/opsworks-deployment
+          requires:
+            - orb-tools/pack
+
+      - orb-tools/trigger-integration-workflow:
+          name: trigger-integration-dev
+          ssh-fingerprints: f4:ee:02:2e:42:86:c3:8e:8a:b2:d4:2d:ed:41:ee:e4
+          requires:
+            - orb-tools/publish-dev
+          filters:
+            branches:
+              ignore: master
+
+      - orb-tools/trigger-integration-workflow:
+          name: trigger-integration-master
+          ssh-fingerprints: f4:ee:02:2e:42:86:c3:8e:8a:b2:d4:2d:ed:41:ee:e4
+          tag: master
+          requires:
+            - orb-tools/publish-dev
+          filters:
+            branches:
+              only: master
+
+  integration-tests_prod-release:
+    jobs:
+      - orb-tools/dev-promote-prod:
+          name: dev-promote-patch
+          orb-name: nebulab/opsworks-deployment
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /master-patch.*/
+
+      - orb-tools/dev-promote-prod:
+          name: dev-promote-minor
+          release: minor
+          orb-name: nebulab/opsworks-deployment
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /master-minor.*/
+
+      - orb-tools/dev-promote-prod:
+          name: dev-promote-major
+          release: major
+          orb-name: nebulab/opsworks-deployment
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /master-major.*/

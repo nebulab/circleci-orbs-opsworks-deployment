@@ -22,9 +22,14 @@ orbs:
   opsworks: nebulab/opsworks-deployment
 
 workflows:
-  cool-workflow:
+  build-and-deploy:
     jobs:
+      - build
       - opsworks/deploy-staging:
+          app_id: your-staging-opsworks-app-id
+          stack_id: your-staging-opsworks-stack-id
+          github_repo: myorg/myrepo
+          slack_hook_url: https://your.slack.hook.url
           requires:
             - build
           filters:
@@ -38,8 +43,20 @@ workflows:
             branches:
               only: master
       - opsworks/deploy-production:
+          app_id: your-staging-opsworks-app-id
+          stack_id: your-staging-opsworks-stack-id
+          github_repo: myorg/myrepo
+          slack_hook_url: https://your.slack.hook.url
           requires:
-            - opsworks/productiom
+            - approve-production
+          filters:
+            branches:
+              only: master
+
+jobs:
+  build:
+    steps:
+      - run your tests here
 ```
 
 ## Publishing
