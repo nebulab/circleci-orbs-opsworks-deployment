@@ -1,0 +1,46 @@
+description: >
+  Use the Orb to deploy staging when a PR is merged and to deploy production when the workflow is
+  approved via CircleCI.
+
+usage:
+  version: 2.1
+
+  orbs:
+    opsworks: nebulab/opsworks-deployment
+
+  workflows:
+    build-and-deploy:
+      jobs:
+        - build
+        - opsworks/deploy-staging:
+            app_id: your-staging-opsworks-app-id
+            stack_id: your-staging-opsworks-stack-id
+            github_repo: myorg/myrepo
+            slack_hook_url: https://your.slack.hook.url
+            requires:
+              - build
+            filters:
+              branches:
+                only: master
+        - approve-production:
+            requires:
+              - opsworks/deploy-staging
+            type: approval
+            filters:
+              branches:
+                only: master
+        - opsworks/deploy-production:
+            app_id: your-staging-opsworks-app-id
+            stack_id: your-staging-opsworks-stack-id
+            github_repo: myorg/myrepo
+            slack_hook_url: https://your.slack.hook.url
+            requires:
+              - approve-production
+            filters:
+              branches:
+                only: master
+
+  jobs:
+    build:
+      steps:
+        - run your tests here
