@@ -35,7 +35,7 @@ steps:
             "attachments": [{
               "title": "Deploy",
               "color": "good",
-              "text": "<https://github.com/<<parameters.github_repo>>/commit/'$CIRCLE_SHA1'|'`echo $CIRCLE_SHA1 | cut -c1-8`'> has been deployed to *production*!"
+              "text": "<https://github.com/<<parameters.github_repo>>/commit/$CIRCLE_SHA1|`echo $CIRCLE_SHA1 | cut -c1-8`> has been deployed to *production*!"
             }]
           }
         EOF
@@ -49,7 +49,7 @@ steps:
             "attachments": [{
               "title": "Deploy",
               "color": "danger",
-              "text": "<https://github.com/<<parameters.github_repo>>/commit/$CIRCLE_SHA1|'`echo $CIRCLE_SHA1 | cut -c1-8`'> failed being deployed to *production*!"
+              "text": "<https://github.com/<<parameters.github_repo>>/commit/$CIRCLE_SHA1|`echo $CIRCLE_SHA1 | cut -c1-8`> failed being deployed to *production*!"
             }]
           }
         EOF
