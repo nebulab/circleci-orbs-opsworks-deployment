@@ -49,9 +49,6 @@ workflows:
           slack_hook_url: https://your.slack.hook.url
           requires:
             - approve-production
-          filters:
-            branches:
-              only: master
 
 jobs:
   build:
