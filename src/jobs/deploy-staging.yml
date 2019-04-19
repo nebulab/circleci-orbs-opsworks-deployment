@@ -21,8 +21,8 @@ steps:
   - deploy:
       name: Deploy Staging
       command: |
-        aws opsworks update-app --app-id 2c5fdb3d-c8dc-4d69-a03a-15fcf8e667b1 --app-source Revision=$CIRCLE_SHA1
-        aws opsworks wait deployment-successful --deployment-ids `aws opsworks create-deployment --stack-id ce91b340-3118-45d4-be85-1b58c4b6067f --app-id 2c5fdb3d-c8dc-4d69-a03a-15fcf8e667b1 --command "{\"Name\":\"deploy\"}" | awk '{print $2}' | sed 's/"//g'`
+        aws opsworks update-app --app-id <<parameters.app_id>> --app-source Revision=$CIRCLE_SHA1
+        aws opsworks wait deployment-successful --deployment-ids `aws opsworks create-deployment --stack-id <<parameters.stack_id>> --app-id <<parameters.app_id>> --command "{\"Name\":\"deploy\"}" | awk '{print $2}' | sed 's/"//g'`
   - run:
       name: Notify Staging Deploy
       command: |
