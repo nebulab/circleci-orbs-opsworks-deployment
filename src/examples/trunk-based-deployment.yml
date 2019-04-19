@@ -39,5 +39,7 @@ usage:
 
   jobs:
     build:
+      docker:
+        - image: circleci/ruby
       steps:
         - run your tests here
