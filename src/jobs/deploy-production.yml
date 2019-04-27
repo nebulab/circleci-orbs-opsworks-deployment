@@ -23,7 +23,9 @@ steps:
         aws opsworks wait deployment-successful --deployment-ids `aws opsworks create-deployment --stack-id <<parameters.stack_id>> --app-id <<parameters.app_id>> --command "{\"Name\":\"deploy\"}" | awk '{print $2}' | sed 's/"//g'`
   - run:
       name: Remember Last Deploy Ref
-      command: echo $CIRCLE_SHA1 > .last_deploy
+      command: |
+        echo $CIRCLE_SHA1 > .last_deploy
+        chmod 777 .last_deploy
   - save_cache:
       key: last-head-{{ epoch }}
       paths: .last_deploy
