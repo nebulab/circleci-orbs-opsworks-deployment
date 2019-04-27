@@ -16,16 +16,19 @@ parameters:
 
 steps:
   - checkout
+  - run:
+      name: Install awscli
+      command: pip install awscli --user
   - deploy:
       name: Deploy to Production
       command: |
-        aws opsworks update-app --app-id <<parameters.app_id>> --app-source Revision=$CIRCLE_SHA1
-        aws opsworks wait deployment-successful --deployment-ids `aws opsworks create-deployment --stack-id <<parameters.stack_id>> --app-id <<parameters.app_id>> --command "{\"Name\":\"deploy\"}" | awk '{print $2}' | sed 's/"//g'`
+        ~/.local/bin/aws opsworks update-app --app-id <<parameters.app_id>> --app-source Revision=$CIRCLE_SHA1
+        ~/.local/bin/aws opsworks wait deployment-successful --deployment-ids `~/.local/bin/aws opsworks create-deployment --stack-id <<parameters.stack_id>> --app-id <<parameters.app_id>> --command "{\"Name\":\"deploy\"}" | awk '{print $2}' | sed 's/"//g'`
   - run:
       name: Remember Last Deploy Ref
       command: echo $CIRCLE_SHA1 > .last_deploy
   - save_cache:
-      key: last-head-{{ epoch }}
+      key: last-head-v2-{{ epoch }}
       paths: .last_deploy
   - run:
       name: Notify Successful Production Deploy
