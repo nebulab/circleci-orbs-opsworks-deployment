@@ -1,0 +1,109 @@
+executor: default
+
+parameters:
+  app_id:
+    type: string
+    description: The ID of the OpsWorks app to deploy.
+  stack_id:
+    type: string
+    description: The ID of the OpsWorks stack to deploy.
+  github_repo:
+    type: string
+    description: The path of your GitHub repo (org/name).
+  slack_hook_url:
+    type: string
+    description: The URL of the Slack hook to notify.
+  current_env:
+    type: string
+    description: The name of the environment currently being deployed.
+  next_env:
+    type: string
+    description: The next of the next environment to deploy.
+    default: ~
+
+steps:
+  - checkout
+  - run:
+      name: Install awscli
+      command: pip install awscli --user
+  - deploy:
+      name: Deploy to <<parameters.current_env>>
+      command: |
+        ~/.local/bin/aws opsworks update-app --app-id <<parameters.app_id>> --app-source Revision=$CIRCLE_SHA1
+        ~/.local/bin/aws opsworks wait deployment-successful --deployment-ids `~/.local/bin/aws opsworks create-deployment --stack-id <<parameters.stack_id>> --app-id <<parameters.app_id>> --command "{\"Name\":\"deploy\"}" | awk '{print $2}' | sed 's/"//g'`
+  - run:
+      name: Remember Last Deploy Ref
+      command: echo $CIRCLE_SHA1 > .last_deploy_<<parameters.current_env>>
+  - save_cache:
+      key: last-head-v2-{{ epoch }}
+      paths: .last_deploy
+  - when:
+      condition: <<parameters.next_env>>
+      steps:
+        - run:
+            name: Notify Successful Deploy
+            command: |
+              cat \<<- EOF > notification.json
+                {
+                  "attachments": [{
+                    "title": "Deploy",
+                    "color": "good",
+                    "text": "The application has been deployed to *<<parameters.current_env>>*.\nApproving the workflow will deploy to *<<parameters.next_env>>*.\nChanges are from last *<<parameters.next_env>>* deploy.",
+                    "fields": [{
+                      "title": "<<parameters.current_env>> Ref",
+                      "short": true,
+                      "value": "<https://github.com/<<parameters.github_repo>>/commit/$CIRCLE_SHA1|`echo $CIRCLE_SHA1 | cut -c1-8`>"
+                    }, {
+                        "title": "<<parameters.next_env>> Ref",
+                        "short": true,
+                        "value": "<https://github.com/<<parameters.github_repo>>/commit/`cat .last_deploy_<<parameters.next_env>>`|`cat .last_deploy | cut -c1-8`>"
+                      }
+                    ],
+                    "actions": [{
+                      "type": "button",
+                      "text": "See Changes :octocat:",
+                      "style": "primary",
+                      "url": "https://github.com/<<parameters.github_repo>>/compare/`cat .last_deploy_<<parameters.next_env>>`...$CIRCLE_SHA1"
+                    }, {
+                        "type": "button",
+                        "style": "danger",
+                        "text": "Approve Workflow :shipit:",
+                        "url": "https://circleci.com/workflow-run/$CIRCLE_WORKFLOW_ID"
+                      }
+                    ]
+                  }]
+                }
+              EOF
+              curl -X POST -H 'Content-type: application/json' --data '@notification.json' <<parameters.slack_hook_url>>
+            when: on_success
+  - unless:
+      condition: <<parameters.next_env>>
+      steps:
+        - run:
+            name: Notify Successful Deploy
+            command: |
+              cat \<<- EOF > notification.json
+                {
+                  "attachments": [{
+                    "title": "Deploy",
+                    "color": "good",
+                    "text": "<https://github.com/<<parameters.github_repo>>/commit/$CIRCLE_SHA1|`echo $CIRCLE_SHA1 | cut -c1-8`> has been deployed to *<<parameters.current_env>>*!"
+                  }]
+                }
+              EOF
+              curl -X POST -H 'Content-type: application/json' --data '@notification.json' <<parameters.slack_hook_url>>
+            when: on_success
+  - run:
+      name: Notify Failed Deploy
+      command: |
+        cat \<<- EOF > notification.json
+          {
+            "attachments": [{
+              "title": "Deploy",
+              "color": "danger",
+              "text": "<https://github.com/<<parameters.github_repo>>/commit/$CIRCLE_SHA1|`echo $CIRCLE_SHA1 | cut -c1-8`> failed being deployed to *<<parameters.current_env>>*!"
+            }]
+          }
+        EOF
+        curl -X POST -H 'Content-type: application/json' --data '@notification.json' <<parameters.slack_hook_url>>
+      when: on_fail
