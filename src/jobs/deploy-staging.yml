@@ -18,11 +18,14 @@ steps:
   - checkout
   - restore_cache:
       key: last-head-v1
+  - run:
+      name: Install awscli
+      command: pip install awscli --user
   - deploy:
       name: Deploy Staging
       command: |
-        aws opsworks update-app --app-id <<parameters.app_id>> --app-source Revision=$CIRCLE_SHA1
-        aws opsworks wait deployment-successful --deployment-ids `aws opsworks create-deployment --stack-id <<parameters.stack_id>> --app-id <<parameters.app_id>> --command "{\"Name\":\"deploy\"}" | awk '{print $2}' | sed 's/"//g'`
+        ~/.local/bin/aws opsworks update-app --app-id <<parameters.app_id>> --app-source Revision=$CIRCLE_SHA1
+        ~/.local/bin/aws opsworks wait deployment-successful --deployment-ids `~/.local/bin/aws opsworks create-deployment --stack-id <<parameters.stack_id>> --app-id <<parameters.app_id>> --command "{\"Name\":\"deploy\"}" | awk '{print $2}' | sed 's/"//g'`
   - run:
       name: Notify Staging Deploy
       command: |

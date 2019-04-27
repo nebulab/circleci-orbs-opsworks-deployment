@@ -1,2 +1,2 @@
 docker:
-  - image: cgswong/aws
+  - image: circleci/python
