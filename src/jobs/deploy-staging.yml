@@ -17,7 +17,7 @@ parameters:
 steps:
   - checkout
   - restore_cache:
-      key: last-head
+      key: last-head-v1
   - deploy:
       name: Deploy Staging
       command: |
