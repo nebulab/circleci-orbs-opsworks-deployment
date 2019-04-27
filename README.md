@@ -19,17 +19,20 @@ Add the following to your CircleCI configuration:
 version: 2.1
 
 orbs:
-  opsworks: nebulab/opsworks-deployment
+  opsworks: nebulab/opsworks-deployment@6.0.0
 
 workflows:
   build-and-deploy:
     jobs:
       - build
-      - opsworks/deploy-staging:
+      - opsworks/deploy:
+          name: deploy-staging
           app_id: your-staging-opsworks-app-id
           stack_id: your-staging-opsworks-stack-id
           github_repo: myorg/myrepo
           slack_hook_url: https://your.slack.hook.url
+          current_env: staging
+          next_env: production
           requires:
             - build
           filters:
@@ -37,16 +40,15 @@ workflows:
               only: master
       - approve-production:
           requires:
-            - opsworks/deploy-staging
+            - deploy-staging
           type: approval
-          filters:
-            branches:
-              only: master
-      - opsworks/deploy-production:
+      - opsworks/deploy:
+          name: deploy-production
           app_id: your-staging-opsworks-app-id
           stack_id: your-staging-opsworks-stack-id
           github_repo: myorg/myrepo
           slack_hook_url: https://your.slack.hook.url
+          current_env: production
           requires:
             - approve-production
 
