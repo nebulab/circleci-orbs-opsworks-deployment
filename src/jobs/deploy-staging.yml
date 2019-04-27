@@ -17,7 +17,7 @@ parameters:
 steps:
   - checkout
   - restore_cache:
-      key: last-head-v1
+      key: last-head-v2
   - run:
       name: Install awscli
       command: pip install awscli --user

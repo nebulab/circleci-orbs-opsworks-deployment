@@ -30,7 +30,7 @@ steps:
         echo $CIRCLE_SHA1 > .last_deploy
         chmod 777 .last_deploy
   - save_cache:
-      key: last-head-v1-{{ epoch }}
+      key: last-head-v2-{{ epoch }}
       paths: .last_deploy
   - run:
       name: Notify Successful Production Deploy
